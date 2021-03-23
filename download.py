@@ -70,24 +70,19 @@ def download_clip(video_identifier, output_filename,
 
     # Construct command line for getting the direct video link.
     # download_clip
-    #print('We are downloading to', output_filename) 
-
     tmp_filename = os.path.join(tmp_dir, '%s.%%(ext)s' % uuid.uuid4())
     command = ['youtube-dl',
                #'--quiet', '--no-warnings',
                '-f', '18',
                '-o', '"%s"' % tmp_filename,
-            #    '--get-url',
+               #    '--get-url',
                '"%s"' % (url_base + video_identifier)]
     command1 = ' '.join(command)
     
     attempts = 0
-    #print('attempting to download', command1)
     while True:
         try:
-            #os.system(command1)
-            direct_download_url = subprocess.check_output(command1, shell=True,
-                                             stderr=subprocess.STDOUT)
+            direct_download_url = subprocess.check_output(command1, shell=True, stderr=subprocess.STDOUT)
             direct_download_url = direct_download_url.strip().decode('utf-8')
         except subprocess.CalledProcessError as err:
             attempts += 1
@@ -98,8 +93,7 @@ def download_clip(video_identifier, output_filename,
         break
     
     tmp_filename = glob.glob('%s*' % tmp_filename.split('.')[0])[0]
-    #print('downloaded 2', tmp_filename)
-    if end_time>0:
+    if end_time > 0:
         command = ['ffmpeg',
                 '-ss', str(start_time),
                 '-t', str(end_time - start_time),
@@ -127,8 +121,7 @@ def download_clip(video_identifier, output_filename,
     command = ' '.join(command)
     print(command1, command)
     try:
-        output = subprocess.check_output(command, shell=True,
-                                         stderr=subprocess.STDOUT)
+        output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as err:
         return status, err.output
 
@@ -140,12 +133,14 @@ def download_clip(video_identifier, output_filename,
 def download_clip_wrapper(row, output_filename):
     """Wrapper for parallel processing purposes. label_to_dir"""
     
-    #print(row, type(row))
-    #print(output_filename)
+    print(row, type(row))
+    print(output_filename)
     downloaded, log = download_clip(row['video-id'], output_filename, row['start-time'], row['end-time'])
+    print('Download status:', str(downloaded), log)
     status = tuple([str(downloaded), output_filename, log])
 
     return status
+
 
 def get_csv_df(input_csv):
     df = pd.read_csv(input_csv)
@@ -179,7 +174,7 @@ def parse_kinetics_annotations(input_csv, ignore_is_cc=False):
         input_csv_dir = input_csv
         csv_list = os.listdir(input_csv)
         csv_list = [f for f in csv_list if f.endswith('.csv')]
-        # print(csv_list)
+
         df = None
         for f in csv_list:
             cdf = get_csv_df(os.path.join(input_csv_dir,f))
@@ -199,12 +194,12 @@ def check_if_video_exist(output_filename):
     if os.path.exists(output_filename):
         # print(get_output_filename, 'exists ')
         fsize = Path(output_filename).stat().st_size
-        # print('exists', output_filename, 'with file size of ',fsize, ' bytes')
-        if fsize>10:
-            return  True
+        print('exists', output_filename, 'with file size of ', fsize, ' bytes')
+        if fsize > 10:
+            return True
         else:
             os.remove(output_filename)
-            print('CHECK file size of ',fsize, ' bytes', output_filename)
+            print('CHECK file size of ', fsize, ' bytes', output_filename)
     return False
 
 
@@ -212,9 +207,8 @@ def get_output_filename(row, dirname, trim_format):
     output_filename = construct_video_filename(row, dirname, trim_format)
     # old_filename = construct_video_filename(row, old_dir, trim_format)
     # clip_id = os.path.basename(output_filename).split('.mp4')[0]
-
-        
     return output_filename, check_if_video_exist(output_filename)
+
 
 def make_video_names(dataset, output_dir, trim_format):
     video_name_list = {}
@@ -223,7 +217,7 @@ def make_video_names(dataset, output_dir, trim_format):
     total = len(dataset)
     print('Total is ', total)
     for ii, row in dataset.iterrows():
-        if ii>1099999999999999:
+        if ii > 1099999999999999:
             break
             
         output_filename, done = get_output_filename(row, output_dir, trim_format)
@@ -263,8 +257,9 @@ def main(input_csv, output_dir,
 
     # Clean tmp dir.
     # Save download report.
-    # with open('download_report.json', 'w') as fobj:
-    #     json.dump( status_lst, fobj)
+    with open('download_report.json', 'w') as fobj:
+        json.dump(status_lst, fobj)
+
 
 if __name__ == '__main__':
     description = 'Helper script for downloading and trimming kinetics videos.'
@@ -278,7 +273,7 @@ if __name__ == '__main__':
                    help=('This will be the format for the '
                          'filename of trimmed videos: '
                          'videoid_%0xd(start_time)_%0xd(end_time).mp4'))
-    p.add_argument('-n', '--num-jobs', type=int, default=20)
+    p.add_argument('-n', '--num-jobs', type=int, default=8)
     p.add_argument('--drop-duplicates', type=str, default='non-existent',
                    help='Unavailable at the moment')
     main(**vars(p.parse_args()))
