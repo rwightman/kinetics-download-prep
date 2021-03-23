@@ -91,6 +91,9 @@ Also, You can specify number of jobs to run in parllel by `--n=number`.
 
 ## Download AVA-Kinetics
 
+**NOTE** AVA-Kinetics download as implemented here doesn't make any sense to me. -- Ross Wightman
+
+
 Similiar to Kinetics you can download clip around the time stamps provide in AVA-Kinetics dataset.
 
 First step to construction download list from AVA-kinetics annoatated videos and their time stamps. You can run `make_ava_kin_download_csv.py` for it. I have laready performed this task on AVA-kinetics-V.1. And you can find the download csv for AVA-Kinetics in `ava_kinetics_csv`.
