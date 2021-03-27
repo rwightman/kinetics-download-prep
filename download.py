@@ -68,7 +68,6 @@ def download_clip(
         return status, 'Downloaded'
 
     # Construct command line for getting the direct video link
-    #tmp_filename = os.path.join(tmp_dir, '%s.%%(ext)s' % uuid.uuid4())
     tmp_filename = os.path.join(tmp_dir, '%s.%%(ext)s' % video_identifier)
     print(f'Download destination filename {tmp_filename}.')
     if not check_if_video_exist(tmp_filename):
@@ -87,10 +86,11 @@ def download_clip(
                 direct_download_url = subprocess.check_output(command1, shell=True, stderr=subprocess.STDOUT)
                 direct_download_url = direct_download_url.strip().decode('utf-8')
             except subprocess.CalledProcessError as err:
+                err_str = err.output.decode()
                 attempts += 1
                 if attempts == num_attempts:
-                    print(f'Error: Failed youtube-dl with error ({err.output})')
-                    return status, err.output
+                    print(f'Error: Failed youtube-dl with error ({err_str})')
+                    return status, str(err_str)
                 else:
                     continue
             break
@@ -124,8 +124,9 @@ def download_clip(
     try:
         output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as err:
-        print(f'Error: Failed running ffmpeg with error ({err.output})')
-        return status, err.output
+        err_str = err.output.decode()
+        print(f'Error: Failed running ffmpeg with error ({err_str})')
+        return status, err_str
 
     status = os.path.exists(output_filename)
     if not keep_temp:
